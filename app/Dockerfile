@@ -23,6 +23,7 @@ RUN pip3 install Werkzeug
 RUN mkdir /app_wsr
 COPY . /app_wsr
 
+RUN mkdir /app_wsr/data
 VOLUME [ "/app_wsr/data" ]
 
 WORKDIR /app_wsr
