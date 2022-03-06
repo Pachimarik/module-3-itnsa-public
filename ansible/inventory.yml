@@ -8,4 +8,8 @@ all:
     ansible_ssh_pass: "{{ lookup( 'env','SSH_PASSWORD' ) }}" 
   hosts:
     region1:
+      ansible_ssh_host: "{{ lookup( 'env','INSTANCE_1' ) }}"
+    region2:
+      ansible_ssh_host: "{{ lookup( 'env','INSTANCE_2' ) }}"
+    region3:
       ansible_ssh_host: "{{ lookup( 'env','INSTANCE_3' ) }}"

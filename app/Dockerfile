@@ -17,11 +17,8 @@ RUN pip3 install PyYAML
 RUN pip3 install Werkzeug
 
 # add aplication
-# ADD ./app.py /app_wsr
-# ADD ./env.yml /app_wsr
-# ADD ./data /app_wsr/data
 RUN mkdir /app_wsr
-COPY ./app /app_wsr
+COPY . /app_wsr
 
 RUN mkdir /app_wsr/data
 VOLUME [ "/app_wsr/data" ]
