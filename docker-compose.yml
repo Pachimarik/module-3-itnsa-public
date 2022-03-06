@@ -1,0 +1,22 @@
+version: '2'
+networks:
+  default:
+    driver: bridge
+
+    ipam:
+      driver: default
+      config:
+        - subnet: "192.255.0.0/24"
+          gateway: "192.255.0.1"
+services:
+  app:
+    build: .
+    volumes:
+      - /data:/app_wsr/data
+
+    #container_name: the best app
+    networks:
+      default:
+
+          ipv4_address: 192.255.0.5
+

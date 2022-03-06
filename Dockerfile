@@ -21,11 +21,10 @@ RUN pip3 install Werkzeug
 # ADD ./env.yml /app_wsr
 # ADD ./data /app_wsr/data
 RUN mkdir /app_wsr
-COPY . /app_wsr
+COPY ./app /app_wsr
 
 RUN mkdir /app_wsr/data
 VOLUME [ "/app_wsr/data" ]
-
 WORKDIR /app_wsr
 
 EXPOSE 8080

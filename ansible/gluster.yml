@@ -1,0 +1,10 @@
+- hosts: all
+  gather_facts: 'no'
+  become: 'yes'
+  tasks:
+    - name: "Create folder"
+      path: /data
+      state: directory
+      mode: '0777'
+    
+    - name: "yum update"
