@@ -9,8 +9,10 @@ WORKDIR /
 RUN mkdir /some-app
 COPY app.py /some-app/app.py
 COPY env.yml /some-app/env.yml
+EXPOSE 8080
 
 WORKDIR /some-app
 RUN mkdir data
 VOLUME [ "/some-app/data" ]
-CMD python3 app.py
+RUN export COMPETITOR_ID
+CMD python3 app.py 

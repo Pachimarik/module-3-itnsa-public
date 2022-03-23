@@ -1,0 +1,14 @@
+version: '3'
+services:
+  beautiful-app:
+    build: .
+    env_file:
+      - .env
+    container_name: beautiful-app
+    volumes:
+      - $PWD/data/:/some-app/data/
+    ports:
+      - 8080:8080
+    environment:
+      - COMPETITOR_ID=${id}
+
