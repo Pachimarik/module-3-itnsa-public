@@ -54,3 +54,28 @@
       - docker-compose.yml
       - Dockerfile
       - env.yml
+
+    - name: "Follow folder app"
+      shell: cd /app
+
+    - name: "docker script"
+      copy: 
+        src: ../app/docker-up
+        dest: /app/docker-up
+        mode: 777
+
+    - name: "edit owner docker script"
+      file:
+        path: /app/docker-up
+        owner: nobody
+        group: nobody
+
+    # - name: "install docker-py"
+    #   shell: pip install docker==4.4.4
+
+    - name: "Run docker-compose"
+      docker_compose:
+        project_src: /app
+        build: yes
+      register: output
+    
