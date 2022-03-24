@@ -19,13 +19,13 @@
         url: https://github.com/docker/compose/releases/download/1.22.0/docker-compose-Linux-x86_64
         dest: /usr/local/bin/docker-compose
         mode: +x
-#########################################################    
+  
     - name: "Enable docker"
       systemd:
         name: docker
         enabled: yes
         masked: no
-
+#########################################################  
     - name: "Install nginx"
       shell: amazon-linux-extras install nginx1
 
@@ -39,6 +39,12 @@
       file:
         path: /etc/nginx/private
         state: directory
+
+    - name: "Copy config"
+      copy:
+        src: ../nginx/nginx.conf 
+        dest: /etc/nginx/nginx.conf
+
 #########################################################
 
     - name: "Create folder for app"
@@ -70,12 +76,10 @@
         owner: nobody
         group: nobody
 
-    # - name: "install docker-py"
-    #   shell: pip install docker==4.4.4
-
     - name: "Run docker-compose"
       docker_compose:
         project_src: /app
         build: yes
       register: output
+
     
