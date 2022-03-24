@@ -9,7 +9,7 @@ all:
   hosts:
     node1:
       ansible_ssh_host: "{{ lookup('env','INSTANCE_1') }}"
-    # node2:
-    #   ansible_ssh_host: "{{ lookup('env','INSTANCE_2') }}"
-    # node3:
-    #   ansible_ssh_host: "{{ lookup('env','INSTANCE_3') }}"
+    node2:
+      ansible_ssh_host: "{{ lookup('env','INSTANCE_2') }}"
+    node3:
+      ansible_ssh_host: "{{ lookup('env','INSTANCE_3') }}"

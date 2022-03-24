@@ -1,4 +1,4 @@
-- hosts: 'node1'
+- hosts: 'all'
   gather_facts: 'no'
   become: 'yes'
   tasks:
@@ -6,13 +6,6 @@
       yum:
         name:
           - docker
-        update_cache: 'yes'
-
-    - name: "change owner for docker socket"
-      file:
-        path: /var/run/docker.sock
-        owner: "{{ lookup('env','SSH_USERNAME') }}"
-        group: docker
     
     - name: "Install docker-compose"
       get_url:
@@ -60,21 +53,6 @@
       - docker-compose.yml
       - Dockerfile
       - env.yml
-
-    - name: "Follow folder app"
-      shell: cd /app
-
-    - name: "docker script"
-      copy: 
-        src: ../app/docker-up
-        dest: /app/docker-up
-        mode: 777
-
-    - name: "edit owner docker script"
-      file:
-        path: /app/docker-up
-        owner: nobody
-        group: nobody
 
     - name: "Run docker-compose"
       docker_compose:
