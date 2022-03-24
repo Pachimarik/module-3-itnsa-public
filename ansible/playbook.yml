@@ -1,0 +1,56 @@
+- hosts: 'node1'
+  gather_facts: 'no'
+  become: 'yes'
+  tasks:
+    - name: "Install docker"
+      yum:
+        name:
+          - docker
+        update_cache: 'yes'
+
+    - name: "change owner for docker socket"
+      file:
+        path: /var/run/docker.sock
+        owner: "{{ lookup('env','SSH_USERNAME') }}"
+        group: docker
+    
+    - name: "Install docker-compose"
+      get_url:
+        url: https://github.com/docker/compose/releases/download/1.22.0/docker-compose-Linux-x86_64
+        dest: /usr/local/bin/docker-compose
+        mode: +x
+#########################################################    
+    - name: "Enable docker"
+      systemd:
+        name: docker
+        enabled: yes
+        masked: no
+
+    - name: "Install nginx"
+      shell: amazon-linux-extras install nginx1
+
+    - name: "Enable nginx"
+      systemd:
+        name: nginx
+        enabled: yes
+        masked: no
+    
+    - name: "Create folder for certs"
+      file:
+        path: /etc/nginx/private
+        state: directory
+#########################################################
+
+    - name: "Create folder for app"
+      file:
+        path: /app
+        state: directory
+    
+    - name: "Move files for app"
+      copy: src=../app/{{ item }} dest=/app/
+      with_items:
+      - .env
+      - app.py
+      - docker-compose.yml
+      - Dockerfile
+      - env.yml
