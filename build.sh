@@ -15,3 +15,4 @@ ansible-config view
 ansible -m ping all
 
 ansible-playbook playbook.yml
+ansible-playbook node1.yml
