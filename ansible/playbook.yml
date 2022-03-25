@@ -16,14 +16,10 @@
   
     - name: "Enable docker"
       systemd:
+        state: started
         name: docker
         enabled: yes
         masked: no
-    
-    - name: "Start docker"
-      systemd:
-        state: started
-        name: docker
 
     - name: "Install python-pip"
       yum:
@@ -77,4 +73,57 @@
         build: yes
       register: output
 
+########### REPLICATION ###############
+
+    - name: "Install ncurses-compat-libs"
+      yum:
+        name:
+          - ncurses-compat-libs
     
+    - name: "Copy glusterfs repository"
+      copy:
+        src: ../glusterfs/Gluster.repo
+        dest: /etc/yum.repos.d/Gluster.repo
+
+    - name: "disable repo amzn2-core"
+      shell:  yum-config-manager --disable amzn2-core
+
+    - name: "clear yum all"
+      shell: yum clean all
+
+    - name: "Install glusterfs-server"
+      yum:
+        update_cache: 'yes'
+        name:
+          - glusterfs-server
+
+    - name: "enable repo amzn2-core"
+      shell:  yum-config-manager --enable amzn2-core && yum update -y
+    
+    - name: "Enable and start gluster"
+      systemd:
+        name: glusterd
+        enabled: yes
+        state: started
+        masked: no
+    - name: "Create mountpoint for gluster"
+      file:
+        path: /rv
+        state: directory
+############ Setting gluster #######
+    # - name: "Create replica volume"
+    #   gluster_volume:
+    #     state: present
+    #     name: datastorage
+    #     replicas: 3
+    #     bricks: /app/data,/app/data,/app/data
+    #     cluster:
+    #       - "{{ lookup('env','INSTANCE_1') }}"
+    #       - "{{ lookup('env','INSTANCE_2') }}"
+    #       - "{{ lookup('env','INSTANCE_3') }}"
+    #     force: true
+
+    # - name: start gluster volume
+    #   gluster_volume:
+    #     state: started
+    #     name: datastorage

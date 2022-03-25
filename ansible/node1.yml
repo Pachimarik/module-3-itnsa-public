@@ -12,3 +12,6 @@
         state: restarted
         daemon_reload: yes
         name: nginx
+    
+    - name: "Add peers glusterfs"
+      shell: "gluster peer probe {{ lookup('env','INSTANCE_2') }} && gluster peer probe {{ lookup('env','INSTANCE_3') }}" 

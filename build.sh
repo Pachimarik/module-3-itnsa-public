@@ -5,6 +5,7 @@ export $(cat  variables | xargs)
 
 sudo amazon-linux-extras install ansible2 -y
 ansible-galaxy collection install community.docker
+ansible-galaxy collection install gluster.gluster
 sudo python2.7 -m pip install docker==4.4.4 --ignore-installed
 sudo python2.7 -m pip install --upgrade setuptools
 sudo python2.7 -m pip install --upgrade pip
@@ -17,3 +18,4 @@ ansible-playbook playbook.yml
 ansible-playbook node1.yml
 ansible-playbook node2.yml
 ansible-playbook node3.yml
+ansible-playbook datacluster.yml

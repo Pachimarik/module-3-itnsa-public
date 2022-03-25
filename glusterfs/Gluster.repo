@@ -1,0 +1,5 @@
+[gluster41]
+name=Gluster 4.1
+baseurl=http://mirror.centos.org/centos/7/storage/x86_64/gluster-4.1/
+gpgcheck=0
+enabled=1
