@@ -2,6 +2,7 @@
   gather_facts: 'no'
   become: 'yes'
   tasks:
+############### INSTALL DOCKER AND MODULES #############################
     - name: "Install docker"
       yum:
         name:
@@ -18,9 +19,25 @@
         name: docker
         enabled: yes
         masked: no
-#########################################################  
+    
+    - name: "Start docker"
+      systemd:
+        state: started
+        name: docker
+
+    - name: "Install python-pip"
+      yum:
+        name:
+          - python-pip
+
+    - name: "Update pip"
+      shell: python2.7 -m pip install --upgrade setuptools && python2.7 -m pip install --upgrade pip
+
+    - name: "Install py module for docker"
+      shell: python2.7 -m pip install docker==4.4.4 --ignore-installed && pip install docker-compose
+################### INSTALL NGINX ######################################  
     - name: "Install nginx"
-      shell: amazon-linux-extras install nginx1
+      shell: amazon-linux-extras install nginx1 -y
 
     - name: "Enable nginx"
       systemd:
@@ -38,7 +55,7 @@
         src: ../nginx/nginx.conf 
         dest: /etc/nginx/nginx.conf
 
-#########################################################
+################# APP ########################################
 
     - name: "Create folder for app"
       file:
