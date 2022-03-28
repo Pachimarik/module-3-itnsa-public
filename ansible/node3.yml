@@ -2,11 +2,78 @@
   gather_facts: 'no'
   become: 'yes'
   tasks:
-    - name: "Copy cert to node3"
-      copy: src=../nginx/node3/{{ item }} dest=/etc/nginx/private/
-      with_items:
-      - app.crt 
-      - app.key
+    - name: "Create cert to node1"
+      shell: "printf '1' |certbot certonly --standalone -d {{ lookup('env','INSTANCE_3') }}.sslip.io --register-unsafely-without-email --force-interactive"
+    
+    - name: Creating a file with content
+      copy:
+        dest: "/etc/nginx/nginx.conf"
+        content: |
+          # For more information on configuration, see:
+          #   * Official English Documentation: http://nginx.org/en/docs/
+          #   * Official Russian Documentation: http://nginx.org/ru/docs/
+
+          user nginx;
+          worker_processes auto;
+          error_log /var/log/nginx/error.log;
+          pid /run/nginx.pid;
+
+          # Load dynamic modules. See /usr/share/doc/nginx/README.dynamic.
+          include /usr/share/nginx/modules/*.conf;
+
+          events {
+              worker_connections 1024;
+          }
+
+          http {
+              log_format  main  '$remote_addr - $remote_user [$time_local] "$request" '
+                                '$status $body_bytes_sent "$http_referer" '
+                                '"$http_user_agent" "$http_x_forwarded_for"';
+
+              access_log  /var/log/nginx/access.log  main;
+
+              sendfile            on;
+              tcp_nopush          on;
+              tcp_nodelay         on;
+              keepalive_timeout   65;
+              types_hash_max_size 4096;
+
+              include             /etc/nginx/mime.types;
+              default_type        application/octet-stream;
+
+              # Load modular configuration files from the /etc/nginx/conf.d directory.
+              # See http://nginx.org/en/docs/ngx_core_module.html#include
+              # for more information.
+              include /etc/nginx/conf.d/*.conf;
+
+
+              upstream app_ssl {
+                  server {{ lookup('env','INSTANCE_1') }}:8080;
+                  server {{ lookup('env','INSTANCE_2') }}:8080;
+                  server {{ lookup('env','INSTANCE_3') }}:8080;
+              }
+
+              server {
+                  listen 80 ;
+                  
+                  location / {
+                      return 301 https://$host$request_uri;
+                  }
+              }
+
+              server {
+                  listen 443 ssl;
+                  ssl_certificate /etc/letsencrypt/live/{{ lookup('env','INSTANCE_3') }}.sslip.io/fullchain.pem;
+                  ssl_certificate_key /etc/letsencrypt/live/{{ lookup('env','INSTANCE_3') }}.sslip.io/privkey.pem;
+
+                  location / {
+                      proxy_next_upstream error timeout http_500;
+                      proxy_pass http://app_ssl;
+                  }
+
+              }
+          }
+
     - name: "Restart nginx"
       systemd:
         state: restarted
