@@ -5,7 +5,7 @@ export $(cat  variables | xargs)
 
 sudo amazon-linux-extras install ansible2 -y
 ansible-galaxy collection install community.docker
-ansible-galaxy collection install gluster.gluster
+ansible-galaxy collection install ansible.posix
 sudo yum install python-pip -y
 sudo python2.7 -m pip install docker==4.4.4 --ignore-installed
 sudo python2.7 -m pip install --upgrade setuptools
