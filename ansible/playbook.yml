@@ -2,6 +2,94 @@
   gather_facts: 'no'
   become: 'yes'
   tasks:
+    - name: "Install firewalld"
+      yum:
+        name:
+          - firewalld
+    
+    - name: "Firewalld start and enable"
+      systemd:
+        name: firewalld
+        enabled: yes
+        state: started
+    
+    - name: "Add port in public zone"
+      firewalld:
+        zone: public
+        interface: eth0
+        permanent: yes
+        state: enabled
+    
+    - name: "Permit ssh"
+      firewalld:
+        zone: public
+        service: ssh
+        permanent: yes
+        state: enabled
+    
+    - name: "Permit http"
+      firewalld:
+        zone: public
+        service: http
+        permanent: yes
+        state: enabled
+    
+    - name: "Permit https"
+      firewalld:
+        zone: public
+        service: https
+        permanent: yes
+        state: enabled
+    
+    - name: "Permit icmp"
+      firewalld:
+        zone: public
+        state: enabled
+        permanent: yes
+        icmp_block: echo-request
+
+    - name: "Permit 8080 tcp"
+      firewalld:
+        zone: public
+        port: 8080/tcp
+        permanent: yes
+        state: enabled
+############ GLUSTER PORTS ##############
+    - name: "Gluster 24007-24008 tcp"
+      firewalld:
+        zone: public
+        port: 24007-24008/tcp
+        permanent: yes
+        state: enabled
+    
+    - name: "Gluster 49152-49155 tcp"
+      firewalld:
+        zone: public
+        port: 49152-49155/tcp
+        permanent: yes
+        state: enabled
+    
+    - name: "Gluster 111 tcp"
+      firewalld:
+        zone: public
+        port: 111/tcp
+        permanent: yes
+        state: enabled
+
+    - name: "Gluster 111 udp"
+      firewalld:
+        zone: public
+        port: 111/udp
+        permanent: yes
+        state: enabled
+
+    - name: "Gluster 2049 tcp"
+      firewalld:
+        zone: public
+        port: 2049/tcp
+        permanent: yes
+        state: enabled
+
 ############### INSTALL DOCKER AND MODULES #############################
     - name: "Install docker"
       yum:
@@ -53,6 +141,7 @@
       file:
         path: /app/data
         state: directory
+        mode: 777
     
     - name: "Move files for app"
       copy: src=../app/{{ item }} dest=/app/
@@ -66,7 +155,6 @@
     - name: "Run docker-compose"
       docker_compose:
         project_src: /app
-        build: yes
       register: output
 ############## certbot ################
     - name: "Install epel"

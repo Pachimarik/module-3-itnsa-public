@@ -6,7 +6,7 @@
       systemd:
         state: stopped
         name: nginx
-    - name: "Create cert to node1"
+    - name: "Create cert to node3"
       shell: "printf 'y' |certbot certonly --standalone -d {{ lookup('env','INSTANCE_3') }}.sslip.io --register-unsafely-without-email --force-interactive"
       run_once: true
 
