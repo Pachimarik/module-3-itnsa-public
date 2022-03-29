@@ -2,9 +2,15 @@
   gather_facts: 'no'
   become: 'yes'
   tasks:
+    - name: "stop nginx"
+      systemd:
+        state: stopped
+        name: nginx
+        
     - name: "Create cert to node1"
-      shell: "printf '1' |certbot certonly --standalone -d {{ lookup('env','INSTANCE_2') }}.sslip.io --register-unsafely-without-email --force-interactive"
-    
+      shell: "printf 'y' |certbot certonly --standalone -d {{ lookup('env','INSTANCE_2') }}.sslip.io --register-unsafely-without-email --force-interactive"
+      run_once: true
+
     - name: Creating a file with content
       copy:
         dest: "/etc/nginx/nginx.conf"
@@ -80,5 +86,18 @@
         daemon_reload: yes
         name: nginx
 
-    - name: "Add peers glusterfs"
-      shell: "gluster peer probe {{ lookup('env','INSTANCE_1') }} && gluster peer probe {{ lookup('env','INSTANCE_3') }}"
+    - name: "ipnode2"
+      shell: host {{ lookup('env','INSTANCE_2') }} | awk '{print $NF}' | sed 's/.$//'
+      register: name2
+   
+    - set_fact:
+        name2={{ name2.stdout }}
+
+    - name: "add record in fstab"
+      lineinfile:
+        path: /etc/fstab
+        line: |
+          {{ name2 }}:/datastorage   /app/data       glusterfs       defaults        0       0 
+    
+    - name: "autorun mount"
+      shell: cd / && ./mount.sh

@@ -1,6 +1,0 @@
-- hosts: 'node3'
-  gather_facts: 'no'
-  become: 'yes'
-  tasks:
-    - name:  
-      shell: "gluster volume create datastorage replica 3  {{ lookup('env','INSTANCE_2') }}:/rv {{ lookup('env','INSTANCE_1') }}:/rv {{ lookup('env','INSTANCE_3') }}:/rv"

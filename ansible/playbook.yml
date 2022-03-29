@@ -31,6 +31,7 @@
 
     - name: "Install py module for docker"
       shell: python2.7 -m pip install docker==4.4.4 --ignore-installed && pip install docker-compose
+
 ################### INSTALL NGINX ######################################  
     - name: "Install nginx"
       shell: amazon-linux-extras install nginx1 -y
@@ -40,22 +41,17 @@
         name: nginx
         enabled: yes
         masked: no
-    
-    # - name: "Create folder for certs"
-    #   file:
-    #     path: /etc/nginx/private
-    #     state: directory
-
-    # - name: "Copy config"
-    #   copy:
-    #     src: ../nginx/nginx.conf 
-    #     dest: /etc/nginx/nginx.conf
 
 ################# APP ########################################
 
     - name: "Create folder for app"
       file:
         path: /app
+        state: directory
+
+    - name: "Create volume"
+      file:
+        path: /app/data
         state: directory
     
     - name: "Move files for app"
@@ -75,7 +71,7 @@
 ############## certbot ################
     - name: "Install epel"
       shell: amazon-linux-extras install epel -y
-
+      
     - name: "install certbot"
       yum:
         update_cache: 'yes'
@@ -118,24 +114,52 @@
         enabled: yes
         state: started
         masked: no
+    
     - name: "Create mountpoint for gluster"
       file:
         path: /rv
         state: directory
-############ Setting gluster #######
-    # - name: "Create replica volume"
-    #   gluster_volume:
-    #     state: present
-    #     name: datastorage
-    #     replicas: 3
-    #     bricks: /app/data,/app/data,/app/data
-    #     cluster:
-    #       - "{{ lookup('env','INSTANCE_1') }}"
-    #       - "{{ lookup('env','INSTANCE_2') }}"
-    #       - "{{ lookup('env','INSTANCE_3') }}"
-    #     force: true
+    
+    - name: "create kostiyl"
+      copy:
+        dest: /mount.sh
+        mode: +x
+        content: |
+          #!/bin/bash
+          mount -a
+    
+    - name: "record in crontab"
+      lineinfile:
+        path: /etc/crontab
+        line: |
+          @reboot root    /mount.sh 
 
-    # - name: start gluster volume
-    #   gluster_volume:
-    #     state: started
-    #     name: datastorage
+########## env for gluster #########
+    - name: "ipnode1"
+      shell: host {{ lookup('env','INSTANCE_1') }} | awk '{print $NF}' | sed 's/.$//'
+      register: name1
+
+    - name: "ipnode2"
+      shell: host {{ lookup('env','INSTANCE_2') }} | awk '{print $NF}' | sed 's/.$//'
+      register: name2
+
+    - name: "ipnode3"
+      shell: host {{ lookup('env','INSTANCE_3') }} | awk '{print $NF}' | sed 's/.$//'
+      register: name3
+
+    - set_fact:
+        name1={{ name1.stdout }}
+        name2={{ name2.stdout }}
+        name3={{ name3.stdout }}
+
+    - name: "Add peers glusterfs"
+      shell: "gluster peer probe {{ name1 }} && gluster peer probe {{ name2 }} && gluster peer probe {{ name3 }} "
+
+#################### create volume ####################
+    - name: "create volume"
+      shell: "gluster volume create datastorage replica 3  {{ name1 }}:/rv {{ name2 }}:/rv {{ name3 }}:/rv force"
+      run_once: true
+    
+    - name: "start volume"
+      shell: gluster volume start datastorage
+      run_once: true

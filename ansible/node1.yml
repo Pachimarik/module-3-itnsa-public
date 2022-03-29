@@ -8,8 +8,9 @@
         name: nginx
         
     - name: "Create cert to node1"
-      shell: "printf '1' |certbot certonly --standalone -d {{ lookup('env','INSTANCE_1') }}.sslip.io --register-unsafely-without-email --force-interactive"
-    
+      shell: "printf 'y' |certbot certonly --standalone -d {{ lookup('env','INSTANCE_1') }}.sslip.io --register-unsafely-without-email --force-interactive"
+      run_once: true
+
     - name: Creating a file with content
       copy:
         dest: "/etc/nginx/nginx.conf"
@@ -84,6 +85,19 @@
         state: restarted
         daemon_reload: yes
         name: nginx
+########### get DNS name for mount ##############
+    - name: "ipnode1"
+      shell: host {{ lookup('env','INSTANCE_1') }} | awk '{print $NF}' | sed 's/.$//'
+      register: name1
+   
+    - set_fact:
+        name1={{ name1.stdout }}
+
+    - name: "add record in fstab"
+      lineinfile:
+        path: /etc/fstab
+        line: |
+          {{ name1 }}:/datastorage   /app/data       glusterfs       defaults        0       0
     
-    - name: "Add peers glusterfs"
-      shell: "gluster peer probe {{ lookup('env','INSTANCE_2') }} && gluster peer probe {{ lookup('env','INSTANCE_3') }}" 
+    - name: "autorun mount"
+      shell: cd / && ./mount.sh
