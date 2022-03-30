@@ -84,93 +84,6 @@
         project_src: /app
       register: output
 
-########### REPLICATION ###############
-    - name: "Install ncurses-compat-libs"
-      yum:
-        name:
-          - ncurses-compat-libs
-    
-    - name: "Copy glusterfs repository"
-      copy:
-        src: ../glusterfs/Gluster.repo
-        dest: /etc/yum.repos.d/Gluster.repo
-
-    - name: "disable repo amzn2-core"
-      shell:  yum-config-manager --disable amzn2-core
-    
-    - name: "disable epel repository"
-      shell: yum-config-manager --disable epel
-
-    - name: "clear yum all"
-      shell: yum clean all
-
-    - name: "Install glusterfs-server"
-      yum:
-        update_cache: 'yes'
-        name:
-          - glusterfs-server
-
-    - name: "enable repo amzn2-core"
-      shell:  yum-config-manager --enable amzn2-core && yum update -y
-    
-    - name: "Enable and start gluster"
-      systemd:
-        name: glusterd
-        enabled: yes
-        state: started
-        masked: no
-    
-    - name: "Create mountpoint for gluster"
-      file:
-        path: /rv
-        state: directory
-    
-    - name: "create kostiyl"
-      copy:
-        dest: /mount.sh
-        mode: +x
-        content: |
-          #!/bin/bash
-          mount -a
-    
-    - name: "record in crontab"
-      lineinfile:
-        path: /etc/crontab
-        line: |
-          @reboot root    /mount.sh 
-
-########## env for gluster #########
-    - name: "ipnode1"
-      shell: host {{ lookup('env','INSTANCE_1') }} | awk '{print $NF}' | sed 's/.$//'
-      register: name1
-
-    - name: "ipnode2"
-      shell: host {{ lookup('env','INSTANCE_2') }} | awk '{print $NF}' | sed 's/.$//'
-      register: name2
-
-    - name: "ipnode3"
-      shell: host {{ lookup('env','INSTANCE_3') }} | awk '{print $NF}' | sed 's/.$//'
-      register: name3
-
-    - set_fact:
-        name1={{ name1.stdout }}
-        name2={{ name2.stdout }}
-        name3={{ name3.stdout }}
-
-#################### create volume ####################
-    - name: "Create gluster volume"
-      gluster_volume:
-        state: present
-        name: datastorage
-        bricks: /rv
-        replicas: 3
-        cluster:
-          - "{{ name1 }}"
-          - "{{ name2 }}"
-          - "{{ name3 }}"
-        force: true
-      run_once: true   
-
 ################### firewalld ##################
     - name: "Install firewalld"
       yum:
@@ -274,3 +187,90 @@
         name: firewalld
         state: restarted
         daemon_reload: yes
+
+########### REPLICATION ###############
+    - name: "Install ncurses-compat-libs"
+      yum:
+        name:
+          - ncurses-compat-libs
+    
+    - name: "Copy glusterfs repository"
+      copy:
+        src: ../glusterfs/Gluster.repo
+        dest: /etc/yum.repos.d/Gluster.repo
+
+    - name: "disable repo amzn2-core"
+      shell:  yum-config-manager --disable amzn2-core
+    
+    - name: "disable epel repository"
+      shell: yum-config-manager --disable epel
+
+    - name: "clear yum all"
+      shell: yum clean all
+
+    - name: "Install glusterfs-server"
+      yum:
+        update_cache: 'yes'
+        name:
+          - glusterfs-server
+
+    - name: "enable repo amzn2-core"
+      shell:  yum-config-manager --enable amzn2-core && yum update -y
+    
+    - name: "Enable and start gluster"
+      systemd:
+        name: glusterd
+        enabled: yes
+        state: started
+        masked: no
+    
+    - name: "Create mountpoint for gluster"
+      file:
+        path: /rv
+        state: directory
+    
+    - name: "create kostiyl"
+      copy:
+        dest: /mount.sh
+        mode: +x
+        content: |
+          #!/bin/bash
+          mount -a
+    
+    - name: "record in crontab"
+      lineinfile:
+        path: /etc/crontab
+        line: |
+          @reboot root    /mount.sh 
+
+########## env for gluster #########
+    - name: "ipnode1"
+      shell: host {{ lookup('env','INSTANCE_1') }} | awk '{print $NF}' | sed 's/.$//'
+      register: name1
+
+    - name: "ipnode2"
+      shell: host {{ lookup('env','INSTANCE_2') }} | awk '{print $NF}' | sed 's/.$//'
+      register: name2
+
+    - name: "ipnode3"
+      shell: host {{ lookup('env','INSTANCE_3') }} | awk '{print $NF}' | sed 's/.$//'
+      register: name3
+
+    - set_fact:
+        name1={{ name1.stdout }}
+        name2={{ name2.stdout }}
+        name3={{ name3.stdout }}
+
+#################### create volume ####################
+    - name: "Create gluster volume"
+      gluster_volume:
+        state: present
+        name: datastorage
+        bricks: /rv
+        replicas: 3
+        cluster:
+          - "{{ name1 }}"
+          - "{{ name2 }}"
+          - "{{ name3 }}"
+        force: true
+      run_once: true
