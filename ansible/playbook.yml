@@ -52,35 +52,6 @@
         name:
           - certbot
           - python2-certbot-nginx
-################# APP ##################
-
-    - name: "Create folder for app"
-      file:
-        path: /app
-        state: directory
-
-    - name: "Create volume"
-      file:
-        path: /app/data
-        state: directory
-        mode: 777
-    
-    - name: "Move files for app"
-      copy: src=../app/{{ item }} dest=/app/
-      with_items:
-      - app.py
-      - docker-compose.yml
-      - Dockerfile
-      - env.yml
-    
-    - name: "Create .env"
-      copy:
-        dest: /app/.env
-        content: |
-          id={{ lookup('env','COMPETITOR_ID') }}
-
-    - name: "Run docker-compose"
-      shell: cd /app && docker-compose up -d
 
 ################### firewalld ##################
     - name: "Install firewalld"
@@ -114,7 +85,6 @@
         service: https
         permanent: yes
         state: enabled
-    -
 
     - name: "Permit http port"
       firewalld:
@@ -279,3 +249,35 @@
           - "{{ name3 }}"
         force: true
       run_once: true
+
+################# APP ##################
+
+    - name: "Create folder for app"
+      file:
+        path: /app
+        state: directory
+
+    - name: "Create volume"
+      file:
+        path: /app/data
+        state: directory
+        mode: 777
+    
+    - name: "Move files for app"
+      copy: src=../app/{{ item }} dest=/app/
+      with_items:
+      - app.py
+      - docker-compose.yml
+      - Dockerfile
+      - env.yml
+    
+    - name: "Create .env"
+      copy:
+        dest: /app/.env
+        content: |
+          id={{ lookup('env','COMPETITOR_ID') }}
+
+    - name: "Run docker-compose"
+      docker_compose:
+        project_src: /app
+      register: output
