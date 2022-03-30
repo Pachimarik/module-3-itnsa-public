@@ -277,6 +277,11 @@
         content: |
           id={{ lookup('env','COMPETITOR_ID') }}
 
+    - name: "Restart docker"
+      systemd:
+        name: docker
+        state: restarted
+
     - name: "Run docker-compose"
       docker_compose:
         project_src: /app
