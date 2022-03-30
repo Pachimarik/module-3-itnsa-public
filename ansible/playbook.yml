@@ -126,17 +126,30 @@
         name2={{ name2.stdout }}
         name3={{ name3.stdout }}
 
-    - name: "Add peers glusterfs"
-      shell: "gluster peer probe {{ name1 }} && gluster peer probe {{ name2 }} && gluster peer probe {{ name3 }} "
-      run_once: true
+    # - name: "Add peers glusterfs"
+    #   shell: "gluster peer probe {{ name1 }} && gluster peer probe {{ name2 }} && gluster peer probe {{ name3 }} "
+    #   run_once: true
 #################### create volume ####################
-    - name: "create volume"
-      shell: "gluster volume create datastorage replica 3  {{ name1 }}:/rv {{ name2 }}:/rv {{ name3 }}:/rv force"
-      run_once: true
+    - name: "Create gluster volume"
+      gluster_volume:
+        state: present
+        name: datastorage
+        bricks: /rv,/rv,/rv
+        replicas: 3
+        cluster:
+          - {{ name1 }}
+          - {{ name2 }}
+          - {{ name3 }}
+        force: true
+      run_once: true   
     
-    - name: "start volume"
-      shell: gluster volume start datastorage
-      run_once: true
+    # - name: "create volume"
+    #   shell: "gluster volume create datastorage replica 3  {{ name1 }}:/rv {{ name2 }}:/rv {{ name3 }}:/rv force"
+    #   run_once: true
+    
+    # - name: "start volume"
+    #   shell: gluster volume start datastorage
+    #   run_once: true
 
 ################# APP ########################################
 
@@ -223,6 +236,14 @@
         port: 8080/tcp
         permanent: yes
         state: enabled
+    
+    - name: "Permit dns"
+      firewalld:
+        zone: public
+        service: dns
+        permanent: yes
+        state: enabled
+
 ############ GLUSTER PORTS ##############
     - name: "Gluster 24007-24008 tcp"
       firewalld:

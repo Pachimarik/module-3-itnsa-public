@@ -4,6 +4,7 @@ export $(cat  variables | xargs)
 #write your ci/cd code here
 
 sudo amazon-linux-extras install ansible2 -y
+ansible-galaxy collection install gluster.gluster
 ansible-galaxy collection install community.docker
 ansible-galaxy collection install ansible.posix
 sudo yum install python-pip -y
