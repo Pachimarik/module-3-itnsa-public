@@ -52,6 +52,37 @@
         name:
           - certbot
           - python2-certbot-nginx
+################# APP ##################
+
+    - name: "Create folder for app"
+      file:
+        path: /app
+        state: directory
+
+    - name: "Create volume"
+      file:
+        path: /app/data
+        state: directory
+        mode: 777
+    
+    - name: "Move files for app"
+      copy: src=../app/{{ item }} dest=/app/
+      with_items:
+      - app.py
+      - docker-compose.yml
+      - Dockerfile
+      - env.yml
+    
+    - name: "Create .env"
+      copy:
+        dest: /app/.env
+        content: |
+          id={{ lookup('env','COMPETITOR_ID') }}
+
+    - name: "Run docker-compose"
+      docker_compose:
+        project_src: /app
+      register: output
 
 ########### REPLICATION ###############
     - name: "Install ncurses-compat-libs"
@@ -126,62 +157,19 @@
         name2={{ name2.stdout }}
         name3={{ name3.stdout }}
 
-    # - name: "Add peers glusterfs"
-    #   shell: "gluster peer probe {{ name1 }} && gluster peer probe {{ name2 }} && gluster peer probe {{ name3 }} "
-    #   run_once: true
 #################### create volume ####################
     - name: "Create gluster volume"
       gluster_volume:
         state: present
         name: datastorage
-        bricks: /rv,/rv,/rv
+        bricks: /rv
         replicas: 3
         cluster:
-          - {{ name1 }}
-          - {{ name2 }}
-          - {{ name3 }}
+          - "{{ name1 }}"
+          - "{{ name2 }}"
+          - "{{ name3 }}"
         force: true
       run_once: true   
-    
-    # - name: "create volume"
-    #   shell: "gluster volume create datastorage replica 3  {{ name1 }}:/rv {{ name2 }}:/rv {{ name3 }}:/rv force"
-    #   run_once: true
-    
-    # - name: "start volume"
-    #   shell: gluster volume start datastorage
-    #   run_once: true
-
-################# APP ########################################
-
-    - name: "Create folder for app"
-      file:
-        path: /app
-        state: directory
-
-    - name: "Create volume"
-      file:
-        path: /app/data
-        state: directory
-        mode: 777
-    
-    - name: "Move files for app"
-      copy: src=../app/{{ item }} dest=/app/
-      with_items:
-      - app.py
-      - docker-compose.yml
-      - Dockerfile
-      - env.yml
-    
-    - name: "Create .env"
-      copy:
-        dest: /app/.env
-        content: |
-          id={{ lookup('env','COMPETITOR_ID') }}
-
-    - name: "Run docker-compose"
-      docker_compose:
-        project_src: /app
-      register: output
 
 ################### firewalld ##################
     - name: "Install firewalld"
@@ -197,7 +185,7 @@
     
     - name: "Add port in public zone"
       firewalld:
-        zone: public
+        zone: trusted
         interface: eth0
         permanent: yes
         state: enabled
@@ -209,17 +197,18 @@
         permanent: yes
         state: enabled
     
-    - name: "Permit http"
-      firewalld:
-        zone: public
-        service: http
-        permanent: yes
-        state: enabled
-    
     - name: "Permit https"
       firewalld:
         zone: public
         service: https
+        permanent: yes
+        state: enabled
+    -
+
+    - name: "Permit http port"
+      firewalld:
+        zone: public
+        port: 80/tcp
         permanent: yes
         state: enabled
     
@@ -279,3 +268,9 @@
         port: 2049/tcp
         permanent: yes
         state: enabled
+    
+    - name: "Restart firewalld"
+      systemd:
+        name: firewalld
+        state: restarted
+        daemon_reload: yes
