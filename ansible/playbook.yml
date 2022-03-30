@@ -80,9 +80,7 @@
           id={{ lookup('env','COMPETITOR_ID') }}
 
     - name: "Run docker-compose"
-      docker_compose:
-        project_src: /app
-      register: output
+      shell: cd /app && docker-compose up -d
 
 ################### firewalld ##################
     - name: "Install firewalld"
@@ -154,6 +152,13 @@
         permanent: yes
         state: enabled
     
+    - name: "Gluster 24009-24108"
+      firewalld:
+        zone: public
+        port: 24009-24108/tcp
+        permanent: yes
+        state: enabled
+
     - name: "Gluster 49152-49155 tcp"
       firewalld:
         zone: public
